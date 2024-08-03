@@ -82,7 +82,7 @@ function ParticipantSelector(props: { client: Client, on_select: (p: Participant
             >Add</button>
             { adding ? "adding..." : null }
             <br/>
-            ({matching_participants.length} matches)
+            ({participants.length} total, {matching_participants.length} {matching_participants.length == 1 ? "match" : "matches"})
         </div>
         <table>
             <tbody>
