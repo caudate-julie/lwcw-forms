@@ -184,7 +184,7 @@ function ContributionsUI(props: { client: Client, participant: Participant }) {
 
     let list;
     if (contributions === null) {
-        list = <Indicator state="in_progress" size="50px"/>
+        list = <Indicator state="in_progress" size="150px"/>
     } else {
         list = <>
             {contributions.map(c => {
