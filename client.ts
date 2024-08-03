@@ -1,3 +1,5 @@
+import { assert } from "./assert.js";
+
 export type CellValue = string | number | boolean | Date;
 
 export class Client {
@@ -36,6 +38,8 @@ export class Client {
         width: number,
         height: number,
     }): Promise<CellValue[][]> {
+        assert(args.row > 0 && args.col > 0);
+        assert(args.width > 0 && args.height > 0);
         return this.make_request<string[][]>("get_range_values", args);
     }
 
@@ -45,6 +49,7 @@ export class Client {
         col: number,
         value: CellValue | null,
     }): Promise<{ success: boolean }> {
+        assert(args.row > 0 && args.col > 0);
         return this.make_request<{ success: boolean }>("set_value", args);
     }
 
@@ -52,6 +57,7 @@ export class Client {
         header_row: number,
         header: CellValue,
     }): Promise<number> {
+        assert(args.header !== "");
         return (await this.make_request<{ col: number }>("add_column", args)).col;
     }
 }
