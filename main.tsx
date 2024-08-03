@@ -123,6 +123,7 @@ function ContributionsUI(props: { client: Client, participant: Participant }) {
     const sheet = "Contributions";
     const start_row = 3;
 
+    let [canary_mismatch, set_canary_mismatch] = useState(false);
     let [contributions, set_contributions] = useState<Contribution[] | null>(null);
 
     useEffect(() => {
@@ -143,6 +144,24 @@ function ContributionsUI(props: { client: Client, participant: Participant }) {
         })();
     }, [client]);
 
+    useEffect(() => {
+        (async () => {
+            let actual_name = (await client.get_range_values({ sheet, row: 2 /* TODO: constant */, col, width: 1, height: 1 }))[0][0].toString();
+            if (actual_name !== name) {
+                set_canary_mismatch(true);
+            }
+        })();
+    }, [client, participant]);
+
+    if (canary_mismatch) {
+        return <>
+            <p>It seems the parts of the spreadsheet we are touching were just changed by someone.
+            Some kinds of changes, like rearranging rows or columns, are particularly hard to reconcile.
+            So we are not even going to try.</p>
+            <p><b>Please reload the page.</b></p>
+        </>;
+    }
+
     let list;
     if (contributions === null) {
         list = <div>Loading...</div>;
@@ -154,7 +173,16 @@ function ContributionsUI(props: { client: Client, participant: Participant }) {
                         <input type="checkbox" checked={c.interested} onChange={async (e) => {
                             let checked = (e.target as HTMLInputElement).checked;
                             set_contributions(contributions.map(c2 => c2.row === c.row ? { ...c2, interested: checked } : c2));
-                            await client.set_value({ sheet, row: c.row, col, value: checked ? "x" : "" });
+                            let res = await client.set_value({
+                                sheet, row: c.row, col, value: checked ? "x" : "",
+                                canaries: [
+                                    { row: 2 /* TODO: constant */, col, expected_value: name },
+                                    { row: c.row, col: 3 /* TODO: constant */, expected_value: c.topic },
+                                ],
+                            });
+                            if (!res) {
+                                set_canary_mismatch(true);
+                            }
                         }}/>
                     </div>
                     <div>
