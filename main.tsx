@@ -3,7 +3,7 @@ import "./vendor/preact/debug.js"; // should be first
 import { assert, bang } from "./assert.js";
 import { Client } from "./client.js";
 import * as preact from "./vendor/preact/preact.js";
-import { useState, useEffect } from "./vendor/preact/hooks.js";
+import { useState, useEffect, useCallback } from "./vendor/preact/hooks.js";
 
 function DeploymentIdPrompt() {
     return <>
@@ -43,9 +43,10 @@ function ParticipantSelector(props: { client: Client, on_select: (p: Participant
 
     // Dual use: search filter and new participant name
     let [field, set_field] = useState(() => localStorage.getItem("participantField") || "");
-    useEffect(() => {
-        localStorage.setItem("participantField", field);
-    }, [field]);
+    function set_and_save_field(x: string) {
+        set_field(x);
+        localStorage.setItem("participantField", x);
+    }
 
     let [participants, set_participants] = useState<Participant[] | null>(null);
     let [adding, set_adding] = useState(false);
@@ -68,8 +69,8 @@ function ParticipantSelector(props: { client: Client, on_select: (p: Participant
             <input type="text"
                 placeholder="name or filter"
                 value={field}
-                onInput={(e) => set_field((e.target as HTMLInputElement).value)}
                 disabled={adding}
+                onInput={(e) => set_and_save_field((e.target as HTMLInputElement).value)}
             />
             <button disabled={!field.trim() || adding || !!exact_match}
                 onClick={async () => {
@@ -88,7 +89,8 @@ function ParticipantSelector(props: { client: Client, on_select: (p: Participant
                 ? <>{participants.length} total</>
                 : <>
                     <span style={{color: "blue", textDecoration: "underline", cursor: "pointer"}}
-                        onClick={() => set_field("")}>{participants.length} total</span>
+                        onClick={() => set_and_save_field("")}
+                    >{participants.length} total</span>
                     {", "}
                     {matching_participants.length} {matching_participants.length == 1 ? "match" : "matches"}
                 </>
@@ -100,7 +102,10 @@ function ParticipantSelector(props: { client: Client, on_select: (p: Participant
                 <tr key={col}>
                     <td>{name}</td>
                     <td>
-                        <button onClick={() => on_select({ col, name })} disabled={adding}>Select</button>
+                        <button disabled={adding} onClick={() => {
+                            set_and_save_field(name);
+                            on_select({ col, name });
+                        }}>Select</button>
                     </td>
                 </tr>
             )}
