@@ -35,12 +35,13 @@ export class Client {
         sheet: number | string,
         row: number,
         col: number,
-        width: number,
-        height: number,
+        width: number | "max",
+        height: number | "max",
     }): Promise<CellValue[][]> {
         assert(args.row > 0 && args.col > 0);
-        assert(args.width > 0 && args.height > 0);
-        return this.make_request<string[][]>("get_range_values", args);
+        assert(args.width === "max" || args.width > 0);
+        assert(args.height === "max" || args.height > 0);
+        return this.make_request<CellValue[][]>("get_range_values", args);
     }
 
     async set_value(args: {

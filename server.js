@@ -19,18 +19,24 @@ function doPost(e) {
 
     let result;
 
-    switch (action) {
-    case "get_range_values":
-        result = get_range_values(ss, args);
-        break;
-    case "set_value":
-        result = set_value(ss, args);
-        break;
-    case "add_column":
-        result = add_column(ss, args);
-        break;
-    default:
-        result = { error: "Invalid action" };
+    try {
+        switch (action) {
+        case "get_range_values":
+            result = get_range_values(ss, args);
+            break;
+        case "set_value":
+            result = set_value(ss, args);
+            break;
+        case "add_column":
+            result = add_column(ss, args);
+            break;
+        default:
+            result = { error: "Invalid action" };
+        }
+    } catch (error) {
+        console.error(error);
+        console.error(error.stack);
+        result = { error: error.message };
     }
 
     return ContentService.createTextOutput(JSON.stringify(result))
@@ -41,7 +47,9 @@ function doPost(e) {
 
 function get_range_values(ss, args) {
     let sheet = get_sheet_by_index_or_name(ss, args.sheet);
-    let range = sheet.getRange(args.row, args.col, args.height, args.width);
+    let height = args.height === "max" ? sheet.getMaxRows() - args.row + 1 : args.height;
+    let width = args.width === "max" ? sheet.getMaxColumns() - args.col + 1 : args.width;
+    let range = sheet.getRange(args.row, args.col, height, width);
     return range.getValues();
 }
 
