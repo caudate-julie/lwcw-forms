@@ -77,24 +77,25 @@ function ParticipantSelector(props: { client: Client, on_select: (p: Participant
     return <>
         <h3>Who are you?</h3>
         <div style={{position: "sticky", top: 0, paddingTop: 10, backgroundColor: "white"}}>
-            <input type="text"
-                placeholder="name or filter"
-                value={field}
-                disabled={adding}
-                onInput={(e) => set_and_save_field((e.target as HTMLInputElement).value)}
-            />
-            <button disabled={!field.trim() || adding || !!exact_match}
-                onClick={async () => {
-                    let name = field.trim();
-                    assert(!!name);
-                    set_adding(true);
-                    let col = await client.add_column({ sheet, header_row, header: name });
-                    set_adding(false);
-                    on_select({ col, name });
-                }}
-            >Add</button>
-            <Indicator state={adding ? "in_progress" : "none"} size="20px"/>
-            <br/>
+            <div style={{display: "flex"}}>
+                <input type="text"
+                    placeholder="name or filter"
+                    value={field}
+                    disabled={adding}
+                    onInput={(e) => set_and_save_field((e.target as HTMLInputElement).value)}
+                />
+                <button disabled={!field.trim() || adding || !!exact_match}
+                    onClick={async () => {
+                        let name = field.trim();
+                        assert(!!name);
+                        set_adding(true);
+                        let col = await client.add_column({ sheet, header_row, header: name });
+                        set_adding(false);
+                        on_select({ col, name });
+                    }}
+                >Add</button>
+                <Indicator state={adding ? "in_progress" : "none"} size="20px"/>
+            </div>
             {
                 field === ""
                 ? <>{participants.length} total</>
