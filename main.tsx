@@ -16,12 +16,13 @@ function DeploymentIdPrompt() {
     </>;
 }
 
-function Indicator(props: { state: "none" | "in_progress" | "success", size: string }) {
-    let { state, size } = props;
+function Indicator(props: { state: "none" | "in_progress" | "success", size?: string, className?: string }) {
+    let { state, size, className } = props;
     // Using <object> instead of <img> to ensure that animation restarts on state changes.
     // https://stackoverflow.com/a/44191891
     return <object
         style={{width: size, height: size, visibility: state === "none" ? "hidden" : "visible"}}
+        className={className}
         type="image/svg+xml"
         data={state == "success" ? "./images/success.svg" : "./images/in_progress.svg"}
     />
@@ -70,14 +71,14 @@ function ParticipantSelector(props: { client: Client, on_select: (p: Participant
     }, [client]);
 
     if (participants === null) {
-        return <Indicator state="in_progress" size="150px"/>;
+        return <Indicator state="in_progress" className="large-indicator"/>;
     }
     let matching_participants = participants.filter(p => p.name.toLowerCase().includes(field.trim().toLowerCase()));
     let exact_match = participants.find(p => p.name === field.trim());
     return <>
         <h3>Who are you?</h3>
-        <div style={{position: "sticky", top: 0, paddingTop: 10, backgroundColor: "white"}}>
-            <div style={{display: "flex"}}>
+        <div className="sticky-header">
+            <div style={{display: "flex", alignItems: "center"}}>
                 <input type="text"
                     placeholder="name or filter"
                     value={field}
@@ -94,19 +95,21 @@ function ParticipantSelector(props: { client: Client, on_select: (p: Participant
                         on_select({ col, name });
                     }}
                 >Add</button>
-                <Indicator state={adding ? "in_progress" : "none"} size="20px"/>
+                <Indicator state={adding ? "in_progress" : "none"} className="adding-indicator"/>
             </div>
+            <div className="filter-info">
             {
                 field === ""
                 ? <>{participants.length} total</>
                 : <>
-                    <span style={{color: "blue", textDecoration: "underline", cursor: "pointer"}}
+                    <span className="filter-link"
                         onClick={() => set_and_save_field("")}
                     >{participants.length} total</span>
                     {", "}
                     {matching_participants.length} {matching_participants.length == 1 ? "match" : "matches"}
                 </>
             }
+            </div>
         </div>
         <table>
             <tbody>
@@ -184,7 +187,7 @@ function ContributionsUI(props: { client: Client, participant: Participant }) {
 
     let list;
     if (contributions === null) {
-        list = <Indicator state="in_progress" size="150px"/>
+        list = <Indicator state="in_progress" className="large-indicator"/>
     } else {
         list = <>
             {contributions.map(c => {
@@ -206,13 +209,16 @@ function ContributionsUI(props: { client: Client, participant: Participant }) {
                     set_contributions((contributions) => bang(contributions)
                         .map(c2 => c2.row === c.row ? { ...c2, progress: "success" } : c2));
                 }
-                return <div key={c.row} style={{display: "flex", alignItems: "flex-start"}}>
-                    <div style={{display: "flex", flexDirection: "column"}}>
+                return <div key={c.row} className="contribution" style={{display: "flex", alignItems: "flex-start"}}>
+                    <div style={{display: "flex", flexDirection: "column", alignItems: "center"}}>
                         <input type="checkbox" checked={c.interested} onChange={on_toggle}/>
-                        <Indicator state={c.progress} size="20px"/>
+                        <Indicator state={c.progress} className="checkbox-indicator"/>
                     </div>
-                    <div>
-                        <div><b>{c.topic || "no topic"}</b> {c.owner ? <>(owner: {c.owner})</> : "(no owner)"}</div>
+                    <div style={{flexGrow: 1}}>
+                        <div className="contribution-header">
+                            <span>{c.topic || "no topic"}</span>
+                            {c.owner && <span className="contribution-owner"> (owner: {c.owner})</span>}
+                        </div>
                         <p>{c.description}</p>
                     </div>
                 </div>

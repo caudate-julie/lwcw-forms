@@ -1,0 +1,182 @@
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    --background-color: #f4f4f4;
+
+    /* For interactive elements like buttons */
+    --primary-color: #3498db;
+
+    /* Hover state for interactive elements */
+    --secondary-color: #2980b9;
+
+    --text-color: #2c3e50;
+
+    /* For borders and disabled elements */
+    --neutral-color: #bdc3c7;
+
+    /* For hovered borders and for accented text */
+    --accent-color: #aaa;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: var(--background-color);
+}
+
+h3 {
+    color: var(--text-color);
+}
+
+p {
+    /* TODO: it's currently used in two places: canary warning and contribution description.
+       Probably these should be different styles. */
+    margin-top: 5px;
+    margin-bottom: 15px;
+}
+
+.large-indicator {
+    width: 150px;
+    height: 150px;
+}
+
+/* Participant selector UI */
+
+.sticky-header {
+    position: sticky;
+    top: 0;
+    background-color: var(--background-color);
+    padding: 10px 0;
+    z-index: 1000;
+}
+
+.filter-info {
+    font-size: 14px;
+    margin-top: 5px;
+    margin-left: 15px;
+}
+
+.filter-link {
+    color: var(--primary-color);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.filter-link:hover {
+    color: var(--secondary-color);
+}
+
+.filter-link:focus {
+    /* TODO */
+    outline: 1px dotted #3498db;
+}
+
+input[type="text"], button {
+    font-size: 16px;
+    padding: 10px;
+    margin: 5px;
+}
+
+input[type="text"] {
+    width: 250px;
+    border: 1px solid var(--neutral-color);
+    background-color: white;
+}
+
+button {
+    background-color: #3498db;
+    color: white;
+    cursor: pointer;
+    border: none;
+}
+
+button:hover:not(:disabled) {
+    background-color: var(--secondary-color);
+}
+
+button:disabled {
+    background-color: var(--neutral-color);
+    cursor: default;
+}
+
+.adding-indicator {
+    width: 36px;
+    height: 36px;
+}
+
+table {
+    width: 100%;
+    max-width: 500px;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+td:nth-child(2) {
+    width: 1%;
+}
+
+/* Contributions UI */
+
+input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    margin: 3px;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #bdc3c7;
+    cursor: pointer;
+}
+
+input[type="checkbox"]:hover {
+    border: 2px solid var(--accent-color);
+}
+
+
+input[type="checkbox"]::before {
+    content: "";
+    display: block;
+    width: 12px;
+    height: 12px;
+    margin: 2px;
+}
+
+input[type="checkbox"]:checked::before {
+    transform: scale(1);
+    background-color: var(--primary-color);
+}
+
+.checkbox-indicator {
+    width: 20px;
+    height: 20px;
+}
+
+.contribution {
+    background-color: white;
+    padding: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+    gap: 5px;
+}
+
+.contribution-header {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.contribution-owner {
+    color: var(--accent-color);
+}
