@@ -48,14 +48,19 @@ export class Client {
         return this.make_request<CellValue[][]>("get_range_values", args);
     }
 
+    /** If any of the canaries don't match, skips updating and returns false. */
     async set_value(args: {
         sheet: number | string,
         row: number,
         col: number,
         value: CellValue | null,
-    }): Promise<{ success: boolean }> {
+        canaries?: { row: number, col: number, expected_value: CellValue }[]
+    }): Promise<boolean> {
         assert(args.row > 0 && args.col > 0);
-        return this.make_request<{ success: boolean }>("set_value", args);
+        for (let canary of args.canaries || []) {
+            assert(canary.row > 0 && canary.col > 0);
+        }
+        return (await this.make_request<{ success: boolean }>("set_value", args)).success;
     }
 
     async add_column(args: {

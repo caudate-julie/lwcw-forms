@@ -55,6 +55,14 @@ function get_range_values(ss, args) {
 
 function set_value(ss, args) {
     let sheet = get_sheet_by_index_or_name(ss, args.sheet);
+
+    for (let canary of args.canaries || []) {
+        let actual_value = sheet.getRange(canary.row, canary.col).getValue();
+        if (actual_value !== canary.expected_value) {
+            return { success: false };
+        }
+    }
+
     sheet.getRange(args.row, args.col).setValue(args.value);
     return { success: true };
 }
