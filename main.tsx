@@ -94,12 +94,77 @@ function ParticipantSelector(props: { client: Client, on_select: (p: Participant
     </>
 }
 
+type Contribution = { row: number, owner: string, topic: string, description: string, interested: boolean };
+
+function ContributionsUI(props: { client: Client, participant: Participant }) {
+    let { client, participant } = props;
+    let { name, col } = participant;
+
+    const sheet = "Contributions";
+    const start_row = 3;
+
+    let [contributions, set_contributions] = useState<Contribution[] | null>(null);
+
+    useEffect(() => {
+        (async () => {
+            let promise1 = client.get_range_values({ sheet, row: start_row, col: 2, width: 3, height: "max" });
+            let promise2 = client.get_range_values({ sheet, row: start_row, col, width: 1, height: "max" });
+            let cs = await promise1;
+            let is = await promise2;
+            console.log(cs.length, is.length);
+            let contrs = cs.map((row, i) => ({
+                row: start_row + i,
+                owner: row[0].toString(),
+                topic: row[1].toString(),
+                description: row[2].toString(),
+                interested: !!is[i][0].toString().trim(),
+            })).filter(c => c.owner || c.topic || c.description || c.interested);
+            set_contributions(contrs);
+        })();
+    }, [client]);
+
+    let list;
+    if (contributions === null) {
+        list = <div>Loading...</div>;
+    } else {
+        list = <>
+            {contributions.map(c =>
+                <div key={c.row} style={{display: "flex", alignItems: "flex-start"}}>
+                    <div>
+                        <input type="checkbox" checked={c.interested} onChange={async (e) => {
+                            let checked = (e.target as HTMLInputElement).checked;
+                            set_contributions(contributions.map(c2 => c2.row === c.row ? { ...c2, interested: checked } : c2));
+                            await client.set_value({ sheet, row: c.row, col, value: checked ? "x" : "" });
+                        }}/>
+                    </div>
+                    <div>
+                        <div><b>{c.topic || "no topic"}</b> {c.owner ? <>(owner: {c.owner})</> : "(no owner)"}</div>
+                        <p>{c.description}</p>
+                    </div>
+                </div>
+            )}
+        </>
+    }
+
+    return <>
+        <h3>What are you interested in, {name}?</h3>
+        {list}
+    </>;
+}
+
 function App(props: { client: Client }) {
     let { client } = props;
 
-    return <ParticipantSelector client={client} on_select={(p) => {
-        console.log("selected", p);
-    }}/>;
+    let [participant, set_participant] = useState<Participant | null>(null);
+
+    if (participant === null) {
+        return <ParticipantSelector client={client} on_select={(p) => {
+            console.log("selected", p);
+            set_participant(p);
+        }}/>;
+    }
+
+    return <ContributionsUI client={client} participant={participant}/>;
 }
 
 let root = bang(document.getElementById("root"));
