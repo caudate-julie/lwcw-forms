@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <style>
+    .checkmark {
+      fill: none;
+      stroke: #4CAF50;
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 100;
+      stroke-dashoffset: 100;
+      animation: draw 0.5s ease forwards, fade 0.5s ease 1.5s forwards;
+    }
+    @keyframes draw {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+    @keyframes fade {
+      to {
+        opacity: 0;
+      }
+    }
+  </style>
+  <path class="checkmark" d="M20 50 L40 70 L80 30" />
+</svg>

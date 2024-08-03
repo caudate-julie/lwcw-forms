@@ -1,6 +1,6 @@
 import "./vendor/preact/debug.js"; // should be first
 
-import { assert, bang } from "./assert.js";
+import { assert, bang, never } from "./assert.js";
 import { Client } from "./client.js";
 import * as preact from "./vendor/preact/preact.js";
 import { useState, useEffect, useCallback } from "./vendor/preact/hooks.js";
@@ -59,7 +59,7 @@ function ParticipantSelector(props: { client: Client, on_select: (p: Participant
     }, [client]);
 
     if (participants === null) {
-        return <div>Loading...</div>;
+        return <img src="./images/in_progress.svg" style={{width: 150, height: 150}}/>;
     }
     let matching_participants = participants.filter(p => p.name.toLowerCase().includes(field.trim().toLowerCase()));
     let exact_match = participants.find(p => p.name === field.trim());
@@ -82,7 +82,7 @@ function ParticipantSelector(props: { client: Client, on_select: (p: Participant
                     on_select({ col, name });
                 }}
             >Add</button>
-            { adding ? "adding..." : null }
+            <img src="./images/in_progress.svg" style={{width: 20, height: 20, visibility: adding ? "visible" : "hidden"}}/>
             <br/>
             {
                 field === ""
@@ -114,7 +114,14 @@ function ParticipantSelector(props: { client: Client, on_select: (p: Participant
     </>
 }
 
-type Contribution = { row: number, owner: string, topic: string, description: string, interested: boolean };
+type Contribution = {
+    row: number,
+    owner: string,
+    topic: string,
+    description: string,
+    interested: boolean,
+    progress: "none" | "in_progress" | "success",
+};
 
 function ContributionsUI(props: { client: Client, participant: Participant }) {
     let { client, participant } = props;
@@ -139,6 +146,7 @@ function ContributionsUI(props: { client: Client, participant: Participant }) {
                 topic: row[1].toString(),
                 description: row[2].toString(),
                 interested: !!is[i][0].toString().trim(),
+                progress: "none" as const,
             })).filter(c => c.owner || c.topic || c.description || c.interested);
             set_contributions(contrs);
         })();
@@ -164,33 +172,51 @@ function ContributionsUI(props: { client: Client, participant: Participant }) {
 
     let list;
     if (contributions === null) {
-        list = <div>Loading...</div>;
+        list = <img src="./images/in_progress.svg" style={{width: 150, height: 150}}/>;
     } else {
         list = <>
-            {contributions.map(c =>
-                <div key={c.row} style={{display: "flex", alignItems: "flex-start"}}>
-                    <div>
-                        <input type="checkbox" checked={c.interested} onChange={async (e) => {
-                            let checked = (e.target as HTMLInputElement).checked;
-                            set_contributions(contributions.map(c2 => c2.row === c.row ? { ...c2, interested: checked } : c2));
-                            let res = await client.set_value({
-                                sheet, row: c.row, col, value: checked ? "x" : "",
-                                canaries: [
-                                    { row: 2 /* TODO: constant */, col, expected_value: name },
-                                    { row: c.row, col: 3 /* TODO: constant */, expected_value: c.topic },
-                                ],
-                            });
-                            if (!res) {
-                                set_canary_mismatch(true);
-                            }
-                        }}/>
+            {contributions.map(c => {
+                let checkbox = <input type="checkbox" checked={c.interested} onChange={async (e) => {
+                    let checked = (e.target as HTMLInputElement).checked;
+                    set_contributions((contributions) => bang(contributions)
+                        .map(c2 => c2.row === c.row ? { ...c2, interested: checked, progress: "in_progress" } : c2));
+                    let res = await client.set_value({
+                        sheet, row: c.row, col, value: checked ? "x" : "",
+                        canaries: [
+                            { row: 2 /* TODO: constant */, col, expected_value: name },
+                            { row: c.row, col: 3 /* TODO: constant */, expected_value: c.topic },
+                        ],
+                    });
+                    if (!res) {
+                        set_canary_mismatch(true);
+                        return;
+                    }
+                    set_contributions((contributions) => bang(contributions)
+                        .map(c2 => c2.row === c.row ? { ...c2, progress: "success" } : c2));
+                }}/>;
+
+                let indicator;
+                if (c.progress === "none") {
+                    indicator = null;
+                } else if (c.progress === "in_progress") {
+                    indicator = <img src="./images/in_progress.svg" style={{width: 20, height: 20}}/>;
+                } else if (c.progress === "success") {
+                    indicator = <img src="./images/success.svg" style={{width: 20, height: 20}}/>;
+                } else {
+                    never(c.progress);
+                }
+
+                return <div key={c.row} style={{display: "flex", alignItems: "flex-start"}}>
+                    <div style={{display: "flex", flexDirection: "column"}}>
+                        {checkbox}
+                        {indicator}
                     </div>
                     <div>
                         <div><b>{c.topic || "no topic"}</b> {c.owner ? <>(owner: {c.owner})</> : "(no owner)"}</div>
                         <p>{c.description}</p>
                     </div>
                 </div>
-            )}
+            })}
         </>
     }
 

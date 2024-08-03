@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <style>
+    .square {
+      fill: #D3D3D3;
+      opacity: 0.3;
+    }
+    .square-1 { animation: blink 1.6s infinite 0s; }
+    .square-2 { animation: blink 1.6s infinite 0.4s; }
+    .square-3 { animation: blink 1.6s infinite 0.8s; }
+    .square-4 { animation: blink 1.6s infinite 1.2s; }
+    @keyframes blink {
+      50% { opacity: 1; }
+    }
+  </style>
+  <rect class="square square-1" x="10" y="10" width="35" height="35" />
+  <rect class="square square-2" x="55" y="10" width="35" height="35" />
+  <rect class="square square-3" x="55" y="55" width="35" height="35" />
+  <rect class="square square-4" x="10" y="55" width="35" height="35" />
+</svg>
