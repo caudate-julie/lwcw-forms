@@ -32,7 +32,7 @@ export class Client {
     // keep these definitions in sync with server.js
 
     async get_range_values(args: {
-        sheet: number,
+        sheet: number | string,
         row: number,
         col: number,
         width: number,
@@ -44,7 +44,7 @@ export class Client {
     }
 
     async set_value(args: {
-        sheet: number,
+        sheet: number | string,
         row: number,
         col: number,
         value: CellValue | null,
@@ -54,6 +54,7 @@ export class Client {
     }
 
     async add_column(args: {
+        sheet: number | string,
         header_row: number,
         header: CellValue,
     }): Promise<number> {

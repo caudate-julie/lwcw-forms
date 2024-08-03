@@ -3,6 +3,14 @@
 //  * in the Google Apps Script project (open the spreadsheet, go to the menu Tools > App Script, then Server.gs)
 // Please keep both versions in sync.
 
+function get_sheet_by_index_or_name(ss, sheet) {
+    let result = typeof sheet === 'number' ? ss.getSheets()[sheet] : ss.getSheetByName(sheet);
+    if (!result) {
+        throw new Error('Sheet not found');
+    }
+    return result;
+}
+
 function doPost(e) {
     let ss = SpreadsheetApp.getActiveSpreadsheet();
     let payload = JSON.parse(e.postData.contents);
@@ -32,19 +40,19 @@ function doPost(e) {
 // keep these definitions in sync with client.ts
 
 function get_range_values(ss, args) {
-    let sheet = ss.getSheets()[args.sheet];
+    let sheet = get_sheet_by_index_or_name(ss, args.sheet);
     let range = sheet.getRange(args.row, args.col, args.height, args.width);
     return range.getValues();
 }
 
 function set_value(ss, args) {
-    let sheet = ss.getSheets()[args.sheet];
+    let sheet = get_sheet_by_index_or_name(ss, args.sheet);
     sheet.getRange(args.row, args.col).setValue(args.value);
     return { success: true };
 }
 
 function add_column(ss, args) {
-    let sheet = ss.getActiveSheet();
+    let sheet = get_sheet_by_index_or_name(ss, args.sheet);
     let last_col = sheet.getLastColumn();
     sheet.insertColumnAfter(last_col);
     let col = last_col + 1;

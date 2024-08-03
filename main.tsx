@@ -21,7 +21,7 @@ function App(props: { client: Client }) {
 
     let [res, setRes] = useState("loading...");
     useEffect(() => {
-        client.get_range_values({ sheet: 0, row: 1, col: 1, width: 2, height: 2})
+        client.get_range_values({ sheet: "Sheet1", row: 1, col: 1, width: 2, height: 2})
             .then((res) => setRes(JSON.stringify(res)));
     }, []);
 
