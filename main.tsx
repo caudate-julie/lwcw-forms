@@ -187,7 +187,7 @@ function ContributionsUI(props: { client: Client, participant: Participant }) {
     } else {
         list = <>
             {contributions.map(c => {
-                let checkbox = <input type="checkbox" checked={c.interested} onChange={async (e) => {
+                async function on_toggle(e: preact.JSX.TargetedEvent) {
                     let checked = (e.target as HTMLInputElement).checked;
                     set_contributions((contributions) => bang(contributions)
                         .map(c2 => c2.row === c.row ? { ...c2, interested: checked, progress: "in_progress" } : c2));
@@ -204,11 +204,10 @@ function ContributionsUI(props: { client: Client, participant: Participant }) {
                     }
                     set_contributions((contributions) => bang(contributions)
                         .map(c2 => c2.row === c.row ? { ...c2, progress: "success" } : c2));
-                }}/>;
-
+                }
                 return <div key={c.row} style={{display: "flex", alignItems: "flex-start"}}>
                     <div style={{display: "flex", flexDirection: "column"}}>
-                        {checkbox}
+                        <input type="checkbox" checked={c.interested} onChange={on_toggle}/>
                         <Indicator state={c.progress} size="20px"/>
                     </div>
                     <div>
