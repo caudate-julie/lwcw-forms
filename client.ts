@@ -2,6 +2,8 @@ import { assert } from "./assert.js";
 
 export type CellValue = string | number | boolean | Date;
 
+let request_count = 0;
+
 export class Client {
     deployment_url: string;
 
@@ -10,7 +12,9 @@ export class Client {
     }
 
     async make_request<T>(action: string, args: any): Promise<T> {
-        console.time(`make_request ${action}`);
+        request_count++;
+        let timer_name = `make_request #${request_count}, ${action}`;
+        console.time(timer_name);
         try {
             let resp = await fetch(this.deployment_url, {
                 method: "POST",
@@ -25,7 +29,7 @@ export class Client {
             }
             return data;
         } finally {
-            console.timeEnd(`make_request ${action}`);
+            console.timeEnd(timer_name);
         }
     }
 
