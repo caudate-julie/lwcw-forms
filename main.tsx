@@ -41,8 +41,13 @@ function ParticipantSelector(props: { client: Client, on_select: (p: Participant
     const header_row = 2;
     const start_col = char_to_col("J");
 
+    // Dual use: search filter and new participant name
+    let [field, set_field] = useState(() => localStorage.getItem("participantField") || "");
+    useEffect(() => {
+        localStorage.setItem("participantField", field);
+    }, [field]);
+
     let [participants, set_participants] = useState<Participant[] | null>(null);
-    let [field, set_field] = useState(""); // dual use: search field and new participant name
     let [adding, set_adding] = useState(false);
 
     useEffect(() => {
