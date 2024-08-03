@@ -18,6 +18,9 @@ function doPost(e) {
     case 'set_value':
         result = set_value(ss, args);
         break;
+    case 'add_column':
+        result = add_column(ss, args);
+        break;
     default:
         result = { error: 'Invalid action' };
     }
@@ -38,4 +41,13 @@ function set_value(ss, args) {
     let sheet = ss.getSheets()[args.sheet];
     sheet.getRange(args.row, args.col).setValue(args.value);
     return { success: true };
+}
+
+function add_column(ss, args) {
+    let sheet = ss.getActiveSheet();
+    let last_col = sheet.getLastColumn();
+    sheet.insertColumnAfter(last_col);
+    let col = last_col + 1;
+    sheet.getRange(args.header_row, col).setValue(args.header);
+    return { col };
 }

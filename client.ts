@@ -48,4 +48,11 @@ export class Client {
     }): Promise<{ success: boolean }> {
         return this.make_request<{ success: boolean }>('set_value', args);
     }
+
+    async add_column(args: {
+        header_row: number,
+        header: CellValue,
+    }): Promise<number> {
+        return (await this.make_request<{ col: number }>('add_column', args)).col;
+    }
 }

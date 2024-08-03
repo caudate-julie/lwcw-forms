@@ -13,5 +13,6 @@ async function main() {
         height: 2,
     });
     console.log(values);
+    // console.log(await client.add_column({ header_row: 1, header: "new column" }));
 }
 main()
