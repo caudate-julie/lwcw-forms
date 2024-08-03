@@ -69,6 +69,7 @@ function ParticipantSelector(props: { client: Client, on_select: (p: Participant
                 placeholder="name or filter"
                 value={field}
                 onInput={(e) => set_field((e.target as HTMLInputElement).value)}
+                disabled={adding}
             />
             <button disabled={!field.trim() || adding || !!exact_match}
                 onClick={async () => {
@@ -99,7 +100,7 @@ function ParticipantSelector(props: { client: Client, on_select: (p: Participant
                 <tr key={col}>
                     <td>{name}</td>
                     <td>
-                        <button onClick={() => on_select({ col, name })}>Select</button>
+                        <button onClick={() => on_select({ col, name })} disabled={adding}>Select</button>
                     </td>
                 </tr>
             )}
