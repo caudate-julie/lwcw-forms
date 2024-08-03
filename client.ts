@@ -11,8 +11,7 @@ export class Client {
         console.time(`make_request ${action}`);
         try {
             let resp = await fetch(this.deployment_url, {
-                // redirect: 'follow',
-                method: 'POST',
+                method: "POST",
                 body: JSON.stringify({ action, args }),
             });
             if (!resp.ok) {
@@ -37,7 +36,7 @@ export class Client {
         width: number,
         height: number,
     }): Promise<CellValue[][]> {
-        return this.make_request<string[][]>('get_range_values', args);
+        return this.make_request<string[][]>("get_range_values", args);
     }
 
     async set_value(args: {
@@ -46,13 +45,13 @@ export class Client {
         col: number,
         value: CellValue | null,
     }): Promise<{ success: boolean }> {
-        return this.make_request<{ success: boolean }>('set_value', args);
+        return this.make_request<{ success: boolean }>("set_value", args);
     }
 
     async add_column(args: {
         header_row: number,
         header: CellValue,
     }): Promise<number> {
-        return (await this.make_request<{ col: number }>('add_column', args)).col;
+        return (await this.make_request<{ col: number }>("add_column", args)).col;
     }
 }
