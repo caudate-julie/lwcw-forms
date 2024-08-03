@@ -1,9 +1,9 @@
 import "./vendor/preact/debug.js"; // should be first
 
-import { assert, bang, never } from "./assert.js";
+import { assert, bang } from "./assert.js";
 import { Client } from "./client.js";
 import * as preact from "./vendor/preact/preact.js";
-import { useState, useEffect, useCallback } from "./vendor/preact/hooks.js";
+import { useState, useEffect } from "./vendor/preact/hooks.js";
 
 function DeploymentIdPrompt() {
     return <>
@@ -18,15 +18,13 @@ function DeploymentIdPrompt() {
 
 function Indicator(props: { state: "none" | "in_progress" | "success", size: string }) {
     let { state, size } = props;
-    if (state === "none") {
-        return <img src="./images/in_progress.svg" style={{width: size, height: size, visibility: "hidden"}}/>;
-    } else if (state === "in_progress") {
-        return <img src="./images/in_progress.svg" style={{width: size, height: size}}/>;
-    } else if (state === "success") {
-        return <img src="./images/success.svg" style={{width: size, height: size}}/>;
-    } else {
-        never(state);
-    }
+    // Using <object> instead of <img> to ensure that animation restarts on state changes.
+    // https://stackoverflow.com/a/44191891
+    return <object
+        style={{width: size, height: size, visibility: state === "none" ? "hidden" : "visible"}}
+        type="image/svg+xml"
+        data={state == "success" ? "./images/success.svg" : "./images/in_progress.svg"}
+    />
 }
 
 /*
