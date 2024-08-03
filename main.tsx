@@ -16,6 +16,19 @@ function DeploymentIdPrompt() {
     </>;
 }
 
+function Indicator(props: { state: "none" | "in_progress" | "success", size: string }) {
+    let { state, size } = props;
+    if (state === "none") {
+        return <img src="./images/in_progress.svg" style={{width: size, height: size, visibility: "hidden"}}/>;
+    } else if (state === "in_progress") {
+        return <img src="./images/in_progress.svg" style={{width: size, height: size}}/>;
+    } else if (state === "success") {
+        return <img src="./images/success.svg" style={{width: size, height: size}}/>;
+    } else {
+        never(state);
+    }
+}
+
 /*
 The "Contributions" sheet describes contributions and participants' interest in them.
 The first two rows are headers, starting from row 3 it's one contribution per row.
@@ -59,7 +72,7 @@ function ParticipantSelector(props: { client: Client, on_select: (p: Participant
     }, [client]);
 
     if (participants === null) {
-        return <img src="./images/in_progress.svg" style={{width: 150, height: 150}}/>;
+        return <Indicator state="in_progress" size="150px"/>;
     }
     let matching_participants = participants.filter(p => p.name.toLowerCase().includes(field.trim().toLowerCase()));
     let exact_match = participants.find(p => p.name === field.trim());
@@ -82,7 +95,7 @@ function ParticipantSelector(props: { client: Client, on_select: (p: Participant
                     on_select({ col, name });
                 }}
             >Add</button>
-            <img src="./images/in_progress.svg" style={{width: 20, height: 20, visibility: adding ? "visible" : "hidden"}}/>
+            <Indicator state={adding ? "in_progress" : "none"} size="20px"/>
             <br/>
             {
                 field === ""
@@ -172,7 +185,7 @@ function ContributionsUI(props: { client: Client, participant: Participant }) {
 
     let list;
     if (contributions === null) {
-        list = <img src="./images/in_progress.svg" style={{width: 150, height: 150}}/>;
+        list = <Indicator state="in_progress" size="50px"/>
     } else {
         list = <>
             {contributions.map(c => {
@@ -195,21 +208,10 @@ function ContributionsUI(props: { client: Client, participant: Participant }) {
                         .map(c2 => c2.row === c.row ? { ...c2, progress: "success" } : c2));
                 }}/>;
 
-                let indicator;
-                if (c.progress === "none") {
-                    indicator = null;
-                } else if (c.progress === "in_progress") {
-                    indicator = <img src="./images/in_progress.svg" style={{width: 20, height: 20}}/>;
-                } else if (c.progress === "success") {
-                    indicator = <img src="./images/success.svg" style={{width: 20, height: 20}}/>;
-                } else {
-                    never(c.progress);
-                }
-
                 return <div key={c.row} style={{display: "flex", alignItems: "flex-start"}}>
                     <div style={{display: "flex", flexDirection: "column"}}>
                         {checkbox}
-                        {indicator}
+                        <Indicator state={c.progress} size="20px"/>
                     </div>
                     <div>
                         <div><b>{c.topic || "no topic"}</b> {c.owner ? <>(owner: {c.owner})</> : "(no owner)"}</div>
