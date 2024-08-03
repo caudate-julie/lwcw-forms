@@ -82,7 +82,16 @@ function ParticipantSelector(props: { client: Client, on_select: (p: Participant
             >Add</button>
             { adding ? "adding..." : null }
             <br/>
-            ({participants.length} total, {matching_participants.length} {matching_participants.length == 1 ? "match" : "matches"})
+            {
+                field === ""
+                ? <>{participants.length} total</>
+                : <>
+                    <span style={{color: "blue", textDecoration: "underline", cursor: "pointer"}}
+                        onClick={() => set_field("")}>{participants.length} total</span>
+                    {", "}
+                    {matching_participants.length} {matching_participants.length == 1 ? "match" : "matches"}
+                </>
+            }
         </div>
         <table>
             <tbody>
