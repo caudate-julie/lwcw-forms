@@ -26,7 +26,15 @@ body {
     font-family: Arial, sans-serif;
     line-height: 1.6;
     color: var(--text-color);
-    max-width: 800px;
+
+    /* This eliminates horizontal jumping when scrollbar appears or disappears.
+       100vw - 100% is the width of the scrollbar.
+       TODO: This is not ideal. It works on desktop (where the scrollbar takes up space) on wide screens,
+       and it works on mobile where scrollbar is overlayed on top of the content.
+       But it causes jumps on narrow desktop situations.
+    */
+    max-width: calc(800px - (100vw - 100%));
+
     margin: 0 auto;
     padding: 20px;
     background-color: var(--background-color);
