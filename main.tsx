@@ -24,6 +24,7 @@ function Indicator(props: { state: "none" | "in_progress" | "success", size?: st
         style={{width: size, height: size, visibility: state === "none" ? "hidden" : "visible"}}
         className={className}
         type="image/svg+xml"
+        tabIndex={-1}
         data={state == "success" ? "./images/success.svg" : "./images/in_progress.svg"}
     />
 }
