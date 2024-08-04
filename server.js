@@ -47,8 +47,8 @@ function doPost(e) {
 
 function get_range_values(ss, args) {
     let sheet = get_sheet_by_index_or_name(ss, args.sheet);
-    let height = args.height === "max" ? sheet.getMaxRows() - args.row + 1 : args.height;
-    let width = args.width === "max" ? sheet.getMaxColumns() - args.col + 1 : args.width;
+    let height = args.height === "max" ? sheet.getLastRow() - args.row + 1 : args.height;
+    let width = args.width === "max" ? sheet.getLastColumn() - args.col + 1 : args.width;
     let range = sheet.getRange(args.row, args.col, height, width);
     return range.getValues();
 }

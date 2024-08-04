@@ -163,7 +163,7 @@ function ContributionsUI(props: { client: Client, participant: Participant }) {
                 description: row[2].toString(),
                 interested: !!is[i][0].toString().trim(),
                 progress: "none" as const,
-            })).filter(c => c.owner || c.topic || c.description || c.interested);
+            }));
             set_contributions(contrs);
         })();
     }, [client]);
