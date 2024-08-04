@@ -207,16 +207,17 @@ function ContributionsUI(props: { client: Client, name: string, col_promise: Pro
                     set_contributions((contributions) => bang(contributions)
                         .map(c2 => c2.row === c.row ? { ...c2, progress: "success" } : c2));
                 }
+                const checkbox_id = `checkbox-${c.row}`;
                 return <div key={c.row} className="contribution" style={{display: "flex", alignItems: "flex-start"}}>
                     <div style={{display: "flex", flexDirection: "column", alignItems: "center"}}>
-                        <input type="checkbox" checked={c.interested} onChange={on_toggle}/>
+                        <input id={checkbox_id} type="checkbox" checked={c.interested} onChange={on_toggle}/>
                         <Indicator state={c.progress} className="checkbox-indicator"/>
                     </div>
                     <div style={{flexGrow: 1}}>
-                        <div className="contribution-header">
+                        <label htmlFor={checkbox_id} className="contribution-header" style={{cursor: 'pointer'}}>
                             <span>{c.topic || "no topic"}</span>
                             {c.owner && <span className="contribution-owner"> (owner: {c.owner})</span>}
-                        </div>
+                        </label>
                         <p>{c.description}</p>
                     </div>
                 </div>
