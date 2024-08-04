@@ -74,9 +74,9 @@ function ParticipantSelector(props: { client: Client, on_select: (p: { name: str
     let matching_participants = participants.filter(p => p.name.toLowerCase().includes(field.trim().toLowerCase()));
     let exact_match = participants.find(p => p.name === field.trim());
     return <>
-        <h3>Who are you?</h3>
+        <h3>What is your name?</h3>
         <div className="sticky-header">
-            <div style={{display: "flex", alignItems: "center"}}>
+            <div style={{display: "flex", gap: 10, alignItems: "center"}}>
                 <input type="text"
                     placeholder="name or filter"
                     value={field}
