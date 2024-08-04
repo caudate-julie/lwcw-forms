@@ -4,6 +4,7 @@ import { assert, bang } from "./assert.js";
 import { Client } from "./client.js";
 import * as preact from "./vendor/preact/preact.js";
 import { useState, useEffect } from "./vendor/preact/hooks.js";
+import { DomainRepo, type Contribution, type Participant } from "./repo.js";
 
 function DeploymentIdPrompt() {
     return <>
@@ -29,28 +30,8 @@ function Indicator(props: { state: "none" | "in_progress" | "success", size?: st
     />
 }
 
-/*
-The "Contributions" sheet describes contributions and participants' interest in them.
-The first two rows are headers, starting from row 3 it's one contribution per row.
-The organizer, name and the description are in rows B, C and D respectively.
-
-The columns to the very right of the sheet (starting with column J) correspond to participants.
-The name of the participant is in row 2.
-The cells in a participant column, starting from row 3, are either empty or have an "x" in them.
-"x" means that the participant is interested in the contribution.
-*/
-
-function char_to_col(ch: string): number {
-    assert(ch.length === 1 && ch >= "A" && ch <= "Z");
-    return ch.charCodeAt(0) - "A".charCodeAt(0) + 1;
-}
-
-function ParticipantSelector(props: { client: Client, on_select: (p: { name: string, col_promise: Promise<number> }) => void }) {
-    let { client, on_select } = props;
-
-    const sheet = "Contributions";
-    const header_row = 2;
-    const start_col = char_to_col("J");
+function ParticipantSelector(props: { repo: DomainRepo, on_select: (p: { name: string, col_promise: Promise<number> }) => void }) {
+    let { repo, on_select } = props;
 
     // Dual use: search filter and new participant name
     let [field, set_field] = useState(() => localStorage.getItem("participantField") || "");
@@ -59,14 +40,13 @@ function ParticipantSelector(props: { client: Client, on_select: (p: { name: str
         localStorage.setItem("participantField", x);
     }
 
-    let [participants, set_participants] = useState<{ name: string, col: number }[] | null>(null);
+    let [participants, set_participants] = useState<Participant[] | null>(null);
 
     useEffect(() => {
         (async () => {
-            let res = await client.get_range_values({ sheet, row: header_row, col: start_col, width: "max", height: 1 });
-            set_participants(res[0].map((x, i) => ({ name: x.toString(), col: start_col + i })));
+            set_participants(await repo.get_participants());
         })();
-    }, [client]);
+    }, [repo]);
 
     if (participants === null) {
         return <Indicator state="in_progress" className="large-indicator"/>;
@@ -86,8 +66,7 @@ function ParticipantSelector(props: { client: Client, on_select: (p: { name: str
                     onClick={() => {
                         let name = field.trim();
                         assert(!!name);
-                        let col_promise = client.add_column({ sheet, header_row, header: name });
-                        on_select({ col_promise, name });
+                        on_select(repo.add_participants(name));
                     }}
                 >Add</button>
             </div>
@@ -107,13 +86,13 @@ function ParticipantSelector(props: { client: Client, on_select: (p: { name: str
         </div>
         <table>
             <tbody>
-            {matching_participants.map(({ name, col }) =>
-                <tr key={col}>
+            {matching_participants.map(({ name, col_promise }, i) =>
+                <tr key={i}>
                     <td>{name}</td>
                     <td>
                         <button onClick={() => {
                             set_and_save_field(name);
-                            on_select({ col_promise: Promise.resolve(col), name });
+                            on_select({ col_promise, name });
                         }}>Select</button>
                     </td>
                 </tr>
@@ -123,55 +102,44 @@ function ParticipantSelector(props: { client: Client, on_select: (p: { name: str
     </>
 }
 
-type Contribution = {
-    row: number,
-    owner: string,
-    topic: string,
-    description: string,
+type Contribution2 = Contribution & {
     interested: boolean,
     progress: "none" | "in_progress" | "success",
 };
 
-function ContributionsUI(props: { client: Client, name: string, col_promise: Promise<number> }) {
-    let { client, name, col_promise } = props;
-
-    const sheet = "Contributions";
-    const start_row = 3;
+function ContributionsUI(props: { repo: DomainRepo, name: string, col_promise: Promise<number> }) {
+    let { repo, name, col_promise } = props;
 
     let [canary_mismatch, set_canary_mismatch] = useState(false);
-    let [contributions, set_contributions] = useState<Contribution[] | null>(null);
+    let [contributions, set_contributions] = useState<Contribution2[] | null>(null);
     let [col, set_col] = useState<number | null>(null);
 
     useEffect(() => {
         (async () => {
-            let promise1 = client.get_range_values({ sheet, row: start_row, col: 2, width: 3, height: "max" });
+            let promise1 = repo.get_contributions();
             let col = await col_promise;
             set_col(col);
-            let promise2 = client.get_range_values({ sheet, row: start_row, col, width: 1, height: "max" });
+            let promise2 = repo.get_interests(col);
             let cs = await promise1;
-            let is = await promise2;
-            console.log(cs.length, is.length);
-            let contrs = cs.map((row, i) => ({
-                row: start_row + i,
-                owner: row[0].toString(),
-                topic: row[1].toString(),
-                description: row[2].toString(),
-                interested: !!is[i][0].toString().trim(),
+            let interests = await promise2;
+            let cs2 = cs.map((c) => ({
+                ...c,
+                interested: interests.has(c.row),
                 progress: "none" as const,
             }));
-            set_contributions(contrs);
+            set_contributions(cs2);
         })();
-    }, [client, name, col_promise]);
+    }, [name, col_promise]);
 
     useEffect(() => {
         if (col === null) return;
         (async () => {
-            let actual_name = (await client.get_range_values({ sheet, row: 2 /* TODO: constant */, col, width: 1, height: 1 }))[0][0].toString();
+            let actual_name = await repo.get_participant_name(col);
             if (actual_name !== name) {
                 set_canary_mismatch(true);
             }
         })();
-    }, [client, name, col]);
+    }, [name, col]);
 
     if (canary_mismatch) {
         return <>
@@ -192,14 +160,7 @@ function ContributionsUI(props: { client: Client, name: string, col_promise: Pro
                     let checked = (e.target as HTMLInputElement).checked;
                     set_contributions((contributions) => bang(contributions)
                         .map(c2 => c2.row === c.row ? { ...c2, interested: checked, progress: "in_progress" } : c2));
-                    assert(col !== null);  // col is always set before contributions
-                    let res = await client.set_value({
-                        sheet, row: c.row, col, value: checked ? "x" : "",
-                        canaries: [
-                            { row: 2 /* TODO: constant */, col, expected_value: name },
-                            { row: c.row, col: 3 /* TODO: constant */, expected_value: c.topic },
-                        ],
-                    });
+                    let res = await repo.set_interest({ name, col_promise }, c, checked);
                     if (!res) {
                         set_canary_mismatch(true);
                         return;
@@ -231,19 +192,19 @@ function ContributionsUI(props: { client: Client, name: string, col_promise: Pro
     </>;
 }
 
-function App(props: { client: Client }) {
-    let { client } = props;
+function App(props: { repo: DomainRepo }) {
+    let { repo } = props;
 
     let [participant, set_participant] = useState<{ name: string, col_promise: Promise<number> } | null>(null);
 
     if (participant === null) {
-        return <ParticipantSelector client={client} on_select={(p) => {
+        return <ParticipantSelector repo={repo} on_select={(p) => {
             console.log("selected", p);
             set_participant(p);
         }}/>;
     }
 
-    return <ContributionsUI client={client} {...participant}/>;
+    return <ContributionsUI repo={repo} {...participant}/>;
 }
 
 let root = bang(document.getElementById("root"));
@@ -251,7 +212,8 @@ let deployment_id = (new URL(window.location.href)).hash.slice(1);
 if (deployment_id) {
     let deployment_url = `https://script.google.com/macros/s/${deployment_id}/exec`;
     let client = new Client(deployment_url);
-    preact.render(<App client={client}/>, root);
+    let repo = new DomainRepo(client);
+    preact.render(<App repo={repo}/>, root);
 } else {
     preact.render(<DeploymentIdPrompt />, root);
 }
