@@ -45,9 +45,7 @@ function char_to_col(ch: string): number {
     return ch.charCodeAt(0) - "A".charCodeAt(0) + 1;
 }
 
-type Participant = { name: string, col: number };
-
-function ParticipantSelector(props: { client: Client, on_select: (p: Participant) => void }) {
+function ParticipantSelector(props: { client: Client, on_select: (p: { name: string, col_promise: Promise<number> }) => void }) {
     let { client, on_select } = props;
 
     const sheet = "Contributions";
@@ -61,8 +59,7 @@ function ParticipantSelector(props: { client: Client, on_select: (p: Participant
         localStorage.setItem("participantField", x);
     }
 
-    let [participants, set_participants] = useState<Participant[] | null>(null);
-    let [adding, set_adding] = useState(false);
+    let [participants, set_participants] = useState<{ name: string, col: number }[] | null>(null);
 
     useEffect(() => {
         (async () => {
@@ -83,20 +80,16 @@ function ParticipantSelector(props: { client: Client, on_select: (p: Participant
                 <input type="text"
                     placeholder="name or filter"
                     value={field}
-                    disabled={adding}
                     onInput={(e) => set_and_save_field((e.target as HTMLInputElement).value)}
                 />
-                <button disabled={!field.trim() || adding || !!exact_match}
-                    onClick={async () => {
+                <button disabled={!field.trim() || !!exact_match}
+                    onClick={() => {
                         let name = field.trim();
                         assert(!!name);
-                        set_adding(true);
-                        let col = await client.add_column({ sheet, header_row, header: name });
-                        set_adding(false);
-                        on_select({ col, name });
+                        let col_promise = client.add_column({ sheet, header_row, header: name });
+                        on_select({ col_promise, name });
                     }}
                 >Add</button>
-                <Indicator state={adding ? "in_progress" : "none"} className="adding-indicator"/>
             </div>
             <div className="filter-info">
             {
@@ -118,9 +111,9 @@ function ParticipantSelector(props: { client: Client, on_select: (p: Participant
                 <tr key={col}>
                     <td>{name}</td>
                     <td>
-                        <button disabled={adding} onClick={() => {
+                        <button onClick={() => {
                             set_and_save_field(name);
-                            on_select({ col, name });
+                            on_select({ col_promise: Promise.resolve(col), name });
                         }}>Select</button>
                     </td>
                 </tr>
@@ -139,19 +132,21 @@ type Contribution = {
     progress: "none" | "in_progress" | "success",
 };
 
-function ContributionsUI(props: { client: Client, participant: Participant }) {
-    let { client, participant } = props;
-    let { name, col } = participant;
+function ContributionsUI(props: { client: Client, name: string, col_promise: Promise<number> }) {
+    let { client, name, col_promise } = props;
 
     const sheet = "Contributions";
     const start_row = 3;
 
     let [canary_mismatch, set_canary_mismatch] = useState(false);
     let [contributions, set_contributions] = useState<Contribution[] | null>(null);
+    let [col, set_col] = useState<number | null>(null);
 
     useEffect(() => {
         (async () => {
             let promise1 = client.get_range_values({ sheet, row: start_row, col: 2, width: 3, height: "max" });
+            let col = await col_promise;
+            set_col(col);
             let promise2 = client.get_range_values({ sheet, row: start_row, col, width: 1, height: "max" });
             let cs = await promise1;
             let is = await promise2;
@@ -166,16 +161,17 @@ function ContributionsUI(props: { client: Client, participant: Participant }) {
             }));
             set_contributions(contrs);
         })();
-    }, [client]);
+    }, [client, name, col_promise]);
 
     useEffect(() => {
+        if (col === null) return;
         (async () => {
             let actual_name = (await client.get_range_values({ sheet, row: 2 /* TODO: constant */, col, width: 1, height: 1 }))[0][0].toString();
             if (actual_name !== name) {
                 set_canary_mismatch(true);
             }
         })();
-    }, [client, participant]);
+    }, [client, name, col]);
 
     if (canary_mismatch) {
         return <>
@@ -196,6 +192,7 @@ function ContributionsUI(props: { client: Client, participant: Participant }) {
                     let checked = (e.target as HTMLInputElement).checked;
                     set_contributions((contributions) => bang(contributions)
                         .map(c2 => c2.row === c.row ? { ...c2, interested: checked, progress: "in_progress" } : c2));
+                    assert(col !== null);  // col is always set before contributions
                     let res = await client.set_value({
                         sheet, row: c.row, col, value: checked ? "x" : "",
                         canaries: [
@@ -236,7 +233,7 @@ function ContributionsUI(props: { client: Client, participant: Participant }) {
 function App(props: { client: Client }) {
     let { client } = props;
 
-    let [participant, set_participant] = useState<Participant | null>(null);
+    let [participant, set_participant] = useState<{ name: string, col_promise: Promise<number> } | null>(null);
 
     if (participant === null) {
         return <ParticipantSelector client={client} on_select={(p) => {
@@ -245,7 +242,7 @@ function App(props: { client: Client }) {
         }}/>;
     }
 
-    return <ContributionsUI client={client} participant={participant}/>;
+    return <ContributionsUI client={client} {...participant}/>;
 }
 
 let root = bang(document.getElementById("root"));
