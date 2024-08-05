@@ -129,7 +129,7 @@ function ContributionsUI(props: { repo: DomainRepo, name: string, col_promise: P
             }));
             set_contributions(cs2);
         })();
-    }, [name, col_promise]);
+    }, [repo, name, col_promise]);
 
     useEffect(() => {
         if (col === null) return;
@@ -139,7 +139,7 @@ function ContributionsUI(props: { repo: DomainRepo, name: string, col_promise: P
                 set_canary_mismatch(true);
             }
         })();
-    }, [name, col]);
+    }, [repo, name, col]);
 
     if (canary_mismatch) {
         return <>

@@ -11,7 +11,7 @@ export class Client {
         this.deployment_url = deployment_url;
     }
 
-    async make_request<T>(action: string, args: any): Promise<T> {
+    async make_request<T>(action: string, args: unknown): Promise<T> {
         request_count++;
         let timer_name = `make_request #${request_count}, ${action}`;
         console.time(timer_name);
