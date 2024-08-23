@@ -127,6 +127,7 @@ function ContributionsUI(props: { repo: DomainRepo, name: string, col_promise: P
                 interested: interests.has(c.row),
                 progress: "none" as const,
             }));
+            cs2.reverse();
             set_contributions(cs2);
         })();
     }, [repo, name, col_promise]);
