@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:;base64,iVBORw0KGgo="> <!-- Empty favicon -->
+    <title>LWCW forms</title>
+    <!-- <link rel="stylesheet" href="./style.css"> -->
+</head>
+<body>
+    <div id="error-message" style="background-color: red; position: fixed; display: none">
+        unhandled error, see console logs
+    </div>
+    <script>
+        window.addEventListener('error', () => {
+            document.getElementById('error-message').style.display = 'block';
+        }, /* catch resource loading errors as well */ true);
+        window.onunhandledrejection = () => {
+            document.getElementById('error-message').style.display = 'block';
+        };
+    </script>
+    
+    <style>
+        .megarow td {
+            border-top: 1px solid gray;
+        }
+    </style>
+
+    <div id="root"></div>
+
+    <script type="module" src="./overlaps.js"></script>
+</body>
+</html>

@@ -120,4 +120,27 @@ export class DomainRepo {
             ]
         });
     }
+    
+    /** Returns a mapping {contribution_row: [participant_cols] } */
+    async get_all_interests(): Promise<Map<number, Set<number>>> {
+        let res = await this.client.get_range_values({
+            sheet: SHEET,
+            row: CONTRIBUTION_START_ROW,
+            col: PARTICIPANT_START_COL,
+            width: "max",
+            height: "max",
+        });
+        let contribution_row_to_interests = new Map<number, Set<number>>();
+        for (let i = 0; i < res.length; i++) {
+            let row = CONTRIBUTION_START_ROW + i;
+            let interests = new Set<number>();
+            for (let j = 0; j < res[i].length; j++) {
+                if (res[i][j].toString().trim()) {
+                    interests.add(j + PARTICIPANT_START_COL);
+                }
+            }
+            contribution_row_to_interests.set(row, interests);
+        }
+        return contribution_row_to_interests;
+    }
 }
